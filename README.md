@@ -63,3 +63,12 @@ AI开发工作流
 11、`vscode中看到代码有红线报错提醒，是不是因为配置了"python.analysis.typeCheckingMode": "standard"？请使用命令pyright --pythonpath "$(python -c 'import sys; print(sys.executable)')"进行检查和修复`
 
 12、`检查所有md文件、config文件、example文件、其他文件，是否有内容需要新增或删除或更新`
+
+
+各AI工具使用总结：
+
+用Claude opus干活，用codex review 和 修问题 找bug
+
+Gemini 审美好写前端不错，claude 开发快体验好用来做 plan 和日常中低难度任务，codex 找 bug 做重构以及long context 的任务
+
+个人项目必加的 rule：**No backward compatibility** - Break old formats freely。否则 codex/claude 必定帮你写一堆兼容性代码，很快变成屎山
