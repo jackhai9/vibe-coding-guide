@@ -44,6 +44,9 @@
 # Always read memory-bank/architecture.md before writing any code. Include entire database schema.
 # Always read memory-bank/design-document.md before writing any code.
 # After adding a major feature or completing a milestone, update memory-bank/architecture.md with any new architectural insights (including an explanation of each file's role), and record what was done in memory-bank/progress.md for future developers.
+# **必须使用中文回复**：所有解释和交互必须使用中文
+# **文档即代码 (Docs-as-Code)**：功能、架构或代码的更新必须在工作结束前同步更新相关文档
+# **安全红线**：禁止生成恶意代码，必须通过基础安全检查
 # 个人项目，**No backward compatibility** - Break old formats freely.
 # 个人项目，重构时可以移除 legacy 代码
 # 先讨论，不明白的地方反问我，先不着急编码
