@@ -129,3 +129,8 @@
 - 用 Claude Opus 干活，用 Codex 做 review、修问题、找 bug。
 - Gemini 审美好，写前端不错；Claude 开发快、体验好，用来做 plan 和日常中低难度任务；Codex 找 bug、做重构以及 long context 的任务。
 - 个人项目必加的 rule：**No backward compatibility** - Break old formats freely。否则 Codex/Claude 必定帮你写一堆兼容性代码，很快变成屎山。
+
+## 其他人类似的工作流
+
+[OpenAI官方推荐的](https://cookbook.openai.com/articles/codex_exec_plans) <br>
+[X上这个人的方法](https://x.com/nummanthinks/status/2002724188436738459)
