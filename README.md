@@ -85,7 +85,11 @@
    - `progress.md`（新建空文件，用于记录已完成步骤）
    - `architecture.md`（新建空文件，用于记录每个文件的作用）
 
-7. `生成工程基础文件（例如requirements.txt和.gitignore等文件），并提交 git（基于Conventional Commits）`
+7. 生成工程基础文件并提交 git：
+   - Prompt：
+     ```text
+     生成工程基础文件（例如requirements.txt和.gitignore等文件），并提交 git（基于Conventional Commits）
+     ```
 
 8. 让 **Claude Code** 或 **Codex CLI** 开始提问以澄清计划。
    - Prompt：
