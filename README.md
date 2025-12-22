@@ -1,4 +1,4 @@
-# AI 开发工作流
+# Vibe Coding 工作流
 
 以下流程尽量保持“先讨论、再实现”的节奏，确保需求清晰、计划可执行、验证可落地。
 
@@ -6,7 +6,7 @@
 
 1. 创建项目文件夹，并执行 `git init`。
 
-## 产出设计与技术文档
+## 产出设计文档、技术文档、实施计划文档
 
 2. 在 [ChatGPT](https://chatgpt.com/?temporary-chat=true) 讨论设计文档。
    - Prompt：
@@ -88,11 +88,9 @@
    - `progress.md`（新建空文件，用于记录已完成步骤）
    - `architecture.md`（新建空文件，用于记录每个文件的作用）
 
-## 初始化工程
 
-7. `生成工程基础文件（例如requirements.txt和.gitignore等文件），并提交 git（标记为 chore: project bootstrap）`
+7. `生成工程基础文件（例如requirements.txt和.gitignore等文件），并提交 git（基于Conventional Commits）`
 
-## 校准计划
 
 8. 让 **Claude Code** 或 **Codex CLI** 开始提问以澄清计划。
    - Prompt：
@@ -104,7 +102,7 @@
    - 它通常会问 9–10 个问题。全部回答并讨论完后，让它根据你的回答更新 `implementation-plan.md`，让计划更完善。
    - 更新后让其提交到 git。
 
-## 实施与验收
+## 编码与验收
 
 9. 真正开始编码、开始实现：
    - Prompt：
