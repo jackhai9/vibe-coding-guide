@@ -6,7 +6,7 @@
 
 1. 创建项目文件夹，并执行 `git init`。
 
-## 产出设计文档、技术文档、实施计划文档
+## 产出设计文档、技术文档
 
 2. 在 [ChatGPT](https://chatgpt.com/?temporary-chat=true) 讨论设计文档。
    - Prompt：
@@ -22,6 +22,8 @@
      请推荐最合适（最简单但最健壮）的技术栈，输出纯md源码（外层用四个反引号来包裹防止浏览器直接渲染）
      ```
    - 保存为项目根目录 `tech-stack.md`。
+
+## 创建规则
 
 4. 在终端打开 **Claude Code** 或 **Codex CLI**，使用 `/init` 命令。
    - 它会读取已创建的两个 `.md` 文件，生成一套规则来正确引导大模型。
@@ -63,6 +65,8 @@
      - **换行**：单个换行符不会渲染为换行。使用 `<br>` 标签换行（行尾两个空格容易被编辑器自动删除），Markdown 标准语法如 `- ` 开头则无需额外换行标签
      ```
 
+## 产出实施计划文档
+
 5. 将 `design-document.md` 和 `tech-stack.md` 提交给 ChatGPT。
    - Prompt：
      ```markdown
@@ -81,9 +85,7 @@
    - `progress.md`（新建空文件，用于记录已完成步骤）
    - `architecture.md`（新建空文件，用于记录每个文件的作用）
 
-
 7. `生成工程基础文件（例如requirements.txt和.gitignore等文件），并提交 git（基于Conventional Commits）`
-
 
 8. 让 **Claude Code** 或 **Codex CLI** 开始提问以澄清计划。
    - Prompt：
