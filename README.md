@@ -103,12 +103,22 @@
 
 10. 验收流程：`我要如何验证？` → `验证通过。提交修改到git然后继续下一步`，重复此流程直到整个 `implementation-plan.md` 全部完成。
 
-## 其他常用 Prompt
+---
 
-- `vscode中看到代码有红线报错提醒，是不是因为配置了"python.analysis.typeCheckingMode": "standard"？请使用命令pyright --pythonpath "$(python -c 'import sys; print(sys.executable)')"进行检查和修复`
-- `检查所有md文件、config文件、example文件、其他文件，是否有内容需要新增或删除或更新`
+# 附录
 
-## 各 AI 工具使用总结
+## 常用 Prompt
+
+- VSCode 类型检查修复：
+  ```text
+  vscode中看到代码有红线报错提醒，是不是因为配置了"python.analysis.typeCheckingMode": "standard"？请使用命令pyright --pythonpath "$(python -c 'import sys; print(sys.executable)')"进行检查和修复
+  ```
+- 文档完整性检查：
+  ```text
+  检查所有md文件、config文件、example文件、其他文件，是否有内容需要新增或删除或更新
+  ```
+
+## AI 工具使用总结
 
 - 用 Claude Opus 干活，用 Codex 做 review、修问题、找 bug。
 - Gemini 审美好，写前端不错；Claude 开发快、体验好，用来做 plan 和日常中低难度任务；Codex 找 bug、做重构以及 long context 的任务。
