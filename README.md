@@ -157,6 +157,13 @@
   ultrathink：完整研究这个项目，重点看其是否有安全问题，是否有密钥泄漏。列出其对外交互的所有ur和接口。
   ```
   
+- 跑测试：
+  
+  ```text
+  python -m pytest -q
+  python -m pytest -vv tests -s
+  ```
+  
   
 
 ## AI 工具使用总结
