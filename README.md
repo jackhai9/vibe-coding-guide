@@ -6,16 +6,108 @@
 
 1. 创建项目文件夹，记录想法到文档`0_idea.md`，并执行 `git init`。
 
+- <details>
+  <summary>点击查看0_idea.md模版</summary>
+
+   ```text
+   # 初始想法
+   
+   ## 想法
+   
+   用python实现，连接binance交易所进行自动化交易。
+   
+   Binance U 本位永续合约、Hedge 模式、x5倍杠杆、全仓、开仓后不加仓。
+   
+   方向：先只做多，等后续程序跑稳定了再加入做空功能实现双向自动交易。
+   
+   我希望 XXXXX
+   
+   [ 其他的还未想清楚，请引导我思考并与一起我梳理清楚。。。 ]
+   
+   ---
+   
+   ## 一些补充
+   
+   - xxx
+   
+   ---
+   
+   ## 其他通用要求
+   
+   - 涉及到具体数值的，优先考虑可配置
+   
+   - 公共的逻辑和功需要抽取出来，方便复用。新增功能时也要先看下项目中是否已经存在类似的或可复用的功能，避免重复造轮子
+   
+   - 每个关键步骤和关键操作节点都需要打印日志和发送telegram消息，除非明确说不需要
+   
+   - 参考如下设计模式（来自 ~/Projects/vibe-quant）：
+      - 状态机 + 模式轮转（如果需要的话）
+      - 订单隔离：run_id 前缀，避免误撤其他实例或手动订单
+      - 日志系统：结构化事件，按事件类型记录，便于追踪和分析，按天自动滚动，自动压缩旧日志为 .gz，错误日志单独文件，成交日志高亮（控制台绿字提示）
+      - WebSocket 重连（如果需要ws的话）：指数退避
+      - 数据陈旧检测（如果需要的话）
+      - 优雅退出机制（参考"业界最佳实践"方向做 Ctrl+C 快速退出）
+   
+   - Ctrl+C 快速退出的 业界最佳实践 大致思路（尤其是 asyncio + CLI/WS 场景）：
+     - 以"取消任务"为核心：收到 SIGINT/SIGTERM 后，向主任务发 cancel，并在各子任务里及时处理 CancelledError，而不是只靠一个 flag。
+     - 所有耗时等待都可中断：长时间 sleep、轮询、IO 都要用 asyncio.wait 同时监听 shutdown_event，保证一收到就退出。
+     - 阻塞输入要"可忽略"：input() 放到线程里，但主流程不等它；shutdown 后立即返回，忽略线程结果（线程自然挂着没关系）。
+     - 外部调用统一加超时：HTTP/WS 都加短超时与取消处理，避免卡住 shutdown。
+     - 清理阶段单独封装：在 finally 里关闭 WS、exchange、session，并设置最大清理时间，避免"清理本身卡死"。
+     - 日志要清晰区分：shutdown requested、shutdown in progress、shutdown complete，便于排查到底卡在哪一步。
+     一句话：用"任务取消 + 可中断等待 + 有界清理"来保证立即退出。
+     
+   - （如果需要的话）关于 fee 手续费资产：USDⓈ-M 永续通常 commissionAsset 会是 USDT，但不要假设；实现上读取成交回报里的 commissionAsset，若不是 USDT（比如 BNB），就按成交时刻 BNBUSDT（或对应计价对）换算成 USDT 记账，这样最稳。
+   
+   - （如果需要的话）用“单一 Map + phase_type 字段”的结构，来代替上述所提到的列表（如果有提到列表的话）。我在idea中先统一使用列表表述，你在design中自动进行“单一 Map + phase_type 字段”的对应转换和表述即可。
+   
+   - （如果需要的话）K-V形式，比如：
+   K: BTC#15m
+   V: signal_k_open_time:"xxxx年xx月xx日 xx:xx:xx", entry_k_open_time:"xxxx年xx月xx日 xx:xx:xx", entry_k_open_price:yyy, fill_time:"xxxx年xx月xx日 xx:xx:xx", fill_price:yyy, qty:xxx, take_profit_price:yyy, init_stop_price:yyy, realtime_stop_price:yyy, exit_reason:"mmm", exit_time:"xxxx年xx月xx日 xx:xx:xx", exit_price:yyy, pnl:yyy, pnl_pct:xxx, fee:yyy, fill_order_id:xxx, take_profit_order_id:xxx, init_stop_order_id:xxx, realtime_stop_order_id:xxx, exit_order_id:xxx
+   
+   - （如果需要的话）TTL：进入最终状态列表后，保留 N 个周期。在一开始刚进入最终状态列表的时候，把这个条目持久化追加到项目根目录done.tsv文件中。这样的话过期直接从最终状态列表中删除条目即可
+   明确 TTL 的计算方式，否则依旧可能长期堆积。
+     建议实现思路：
+     - 配置项：done_ttl_bars（按周期数）
+     - 当条目进入最终状态列表时，记录 done_expire_at
+         - done_expire_at = exit_open_time + done_ttl_bars * interval_ms
+         - 若 exit_open_time 缺失，用最新 K 线 open_time 兜底
+     - 每次阶段处理器跑该周期时，先清理 now >= done_expire_at 的条目
+     - “now”建议用最新 K 线的 open_time，避免本地时间漂移
+   
+   - （如果需要的话）前期推荐“选一个真实/其余模拟”或“全模拟”，等统计摘要稳定后再开放“全真实”。等根据历史统计出或聚合出摘要之后发现效果不错再进行'全都真实交易'会更好，比如这些摘要：
+     - 今日/最近N天：完成次数、胜率、总盈亏、平均盈亏、平均持仓时长
+     - 按周期/币种维度的胜率与盈亏
+     - 最大连续亏损、最大回撤（如果有权益曲线可算）
+   
+   - （如果需要的话）程序退出时如何处理未完成挂单：是否取消挂单（做成可配置，默认不主动撤单）
+   
+   - （如果需要的话）clientOrderId 规范<br>
+     结构：`{pnameN}_{role}_{symbol}_{interval}_{side}_{run_id}_{seq}`<br>
+     示例：`{pnameN}_E_BTCUSDT_15m_L_rk9x3f_0001`<br>
+     字段含义：
+     - `pnameN`：系统标识与版本号。比如`tf1`。
+     - `role`：订单角色（`E` 入场，`T` 止盈，`I` 初始止损，`R` 实时止损，`X` 退出）。
+     - `symbol`：币种。
+     - `interval`：周期。
+     - `side`：方向（`L`/`S`，当前仅多，预留做空）。
+     - `run_id`：本次运行标识（`r` + 6 位 base36 时间戳）。
+     - `seq`：同一 key 的递增序号（4 位十进制）。
+     解析目标：可稳定解析 `symbol#interval` 与订单角色。
+   
+   - （如果需要的话）2倍盈亏比: '入场k'的开盘价 kentry_k_open_price 与 初始止损价 init_stop_price 的2倍盈亏比的地方，比如：入场价是7.561，初始止损价是7.184，则止盈单的价格是8.315
+   
+   - （如果需要的话）部分成交处理: 已成交部分视为真实持仓并记录成交信息；未成交部分在超时撤单后，作为“剩余数量”继续按入场逻辑重挂；若不再满足“实际可入场”，则接受已成交数量，撤销剩余挂单，按已成交数量挂止损/止盈。
+   ```
+  </details>
+
+
 ## 产出设计文档、技术文档
 
 2. 在 [ChatGPT](https://chatgpt.com/?temporary-chat=true) 或 **Claude Code** 或 **Codex CLI** 讨论设计文档。
    - Prompt：
      ```text
-     根据0_idea.md的内容，请向我提问并与我讨论，最终确认没问题了就形成一个设计文档，并输出设计文档的纯md源码（外层用四个反引号来包裹防止浏览器直接渲染）。现在你有什么问题要问我吗
-     
-     或者
-     
-     根据0_idea.md的内容，请向我提问并与我讨论，最终确认没问题了就输出设计文档“1_design.md“。现在你有什么问题要问我吗
+     根据0_idea.md的内容，请向我提问并与我讨论，最终确认没问题了，输出设计文档“1_design.md“（或输出纯md源码(外层用四个反引号来包裹防止浏览器直接渲染)）。现在你有什么问题要问我吗
      ```
    - 保存为项目根目录 `1_design.md`。
    - 审查并完善该文档，确保符合需求；可以简陋，不要过度设计，后续会迭代。
@@ -23,11 +115,7 @@
 3. 继续让其推荐最合适（**最简单但最健壮**）的技术栈。
    - Prompt：
      ```text
-     请推荐最合适（最简单但最健壮）的技术栈，输出纯md源码（外层用四个反引号来包裹防止浏览器直接渲染）
-     
-     或者
-     
-     请推荐最合适（最简单但最健壮）的技术栈，输出文档“2_tech.md“
+     请推荐最合适（最简单但最健壮）的技术栈，输出文档“2_tech.md“（或输出纯md源码(外层用四个反引号来包裹防止浏览器直接渲染)）
      ```
    - 保存为项目根目录 `2_tech.md`。
 
@@ -74,6 +162,7 @@
    - 完成重要功能或里程碑后，更新 memory-bank/architecture.md（含每个文件的作用说明）和 memory-bank/progress.md（记录做了什么以便知晓进度）
    - 个人项目：**No backward compatibility** - 可自由打破旧格式，重构时可移除 legacy 代码
    - 总是运行`python -m pytest`或`python -m pytest -q`来进行测试，不要直接运行 `pytest`
+   - 提交 git 时，基于 Conventional Commits
    
    ## 3. Markdown 编写规范
    - **换行**：普通单行换行不会渲染为换行，需用 `<br>` 或改为 Markdown 标准结构（列表/分段/标题）实现换行
@@ -90,19 +179,11 @@
 5. 将 `1_design.md` 和 `2_tech.md` 提交给 ChatGPT。
    - Prompt：
      ```markdown
-     根据这两个上传的文件，请生成一份详细的 实施计划md源码（外层用四个反引号来包裹防止浏览器直接渲染），包含一系列给 AI 开发者的分步指令。
+     根据1_design.md和2_tech.md，请生成一份详细的实施计划，输出“3_implementation-plan.md”（或输出纯md源码(外层用四个反引号来包裹防止浏览器直接渲染)），包含一系列给 AI 开发者的分步指令。
      - 每一步要小而具体。
      - 每一步都必须包含验证正确性的测试。
      - 严禁包含代码，只写清晰、具体的指令。
-     - 先聚焦于基础功能，完整功能后面再加。
-     
-     或者
-     
-     根据1_design.md和2_tech.md，请生成一份详细的实施计划，输出“3_implementation-plan.md”，包含一系列给 AI 开发者的分步指令。
-     - 每一步要小而具体。
-     - 每一步都必须包含验证正确性的测试。
-     - 严禁包含代码，只写清晰、具体的指令。
-     - 先聚焦于基础功能，完整功能后面再加。
+     - 不仅聚焦于基础功能，也要包含完整功能，要求**全面而且详细**。
      ```
    - 得到 `3_implementation-plan.md`。
    
@@ -124,8 +205,12 @@
      ```text
      阅读 /memory-bank 里所有文档，3_implementation-plan.md 是否完全清晰？你有哪些问题需要我澄清，让它对你来说 100% 明确？
      ```
-   - 它通常会问 9–10 个问题。全部回答并讨论完后，让它根据你的回答更新 `3_implementation-plan.md`，让计划更完善。
-   - 更新后让其提交到 git。
+     
+   - 它通常会问 9–10 个问题。全部回答并讨论完后，Prompt：
+   
+     ```text
+     根据我的回答更新 `3_implementation-plan.md`，让计划更完善。更新后提交到 git。
+     ```
 
 ## 编码与验收
 
@@ -135,7 +220,17 @@
      阅读 /memory-bank 中的所有文档，并执行实施计划的第一步和测试。然后等待我审核和验证。在我审核和验证之前，不要开始第二步。验证完后，打开 progress.md 并记录你做了什么，供未来的开发者参考；然后在 architecture.md 中加入任何架构见解，解释每个文件的作用。
      ```
 
-10. 验收流程：`我要如何验证？` → `验证通过。提交修改到git然后继续下一步`，重复此流程直到整个 `3_implementation-plan.md` 全部完成。
+10. 验收流程：
+
+    - Prompt：
+
+      ```
+      我要如何验证？
+      
+      验证通过。提交修改到git然后继续下一步
+      ```
+
+    重复此流程直到整个 `3_implementation-plan.md` 中的内容全部实现和完成。
 
 ---
 
