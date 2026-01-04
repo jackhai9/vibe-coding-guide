@@ -65,7 +65,7 @@
    **例外（无需文件头注释）**：
    - 代理指引/协作约束文件：`AGENTS.md`、`CLAUDE.md`
    - 运行时本地配置：`config/*.yaml`、`.env`（含 `.env.*`）
-   - 自动生成目录/文件：`.pytest_cache/`、`logs/`、`__pycache__/`、`*.log`、`*.log.gz`
+   - 自动生成目录/文件：`.pytest_cache/`、`__init__.py`、`logs/`、`__pycache__/`、`*.log`、`*.log.gz`
    - 其他明确标注“不要改动/自动生成”的文件
    
    ## 2. 开发规范
@@ -80,6 +80,9 @@
    
    ## 4. 安全审计
    - ultrathink：完整研究这个项目，重点看其是否有安全问题，是否有密钥泄漏。列出其对外交互的所有ur和接口。
+   
+   ## 5. 其他补充
+   - README中需要有整个项目的完整的逻辑流程图
    ```
 
 ## 产出实施计划文档
@@ -163,6 +166,11 @@
   ```text
   python -m pytest -q
   python -m pytest -vv tests -s
+  ```
+  
+- ```text
+  implementation和idea和design中还有哪些未实现？
+  
   ```
   
   
