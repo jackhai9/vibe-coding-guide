@@ -12,7 +12,9 @@
    ```text
    # 初始想法
    
-   ## 想法
+   ## 期望最终效果
+   
+   最终期望的效果：自动实盘运行，不需要我手工干预。通过配置 trade.dry_run: true/false 控制干跑或实盘模式
    
    用 Python 实现，连接 Binance 交易所进行自动化交易。
    
@@ -20,33 +22,70 @@
    
    方向：先只做多，等后续程序跑稳定了再加入做空功能实现双向自动交易。
    
-   我希望 XXXXX
+   ## 整体流程：
    
-   [ 其他的还未想清楚，请引导我思考并与我一起梳理清楚。。。 ]
+   我希望 XXX
+   
+   
+   [ 还有哪些你认为需要补充或完善的？请猜测我的意图，引导我思考并与我一起梳理清楚。。。  ]
    
    ---
    
    ## 一些补充
    
-   - xxx
+   - YYY
+   
    
    ---
    
    ## 其他通用要求
    
+   - 两种运行模式：live 模式 、dry_run 模式（只打印，不下单）
+     - 最大同时持仓数，只对 live 模式有限制，干跑模式下没有最大同时持仓数限制。
+   
+   - '交易'时的'浮盈'应该实时监测，需要订阅 markPrice WebSocket。也就是说：实时止损只在'交易'时才实现，'观察'时不需要考虑实时止损
+   
    - 涉及到具体数值的，优先考虑可配置
+   
+     比如
+     
+       ```yaml
+       indicators:
+         fast_ma:
+           type: EMA
+           period: 20
+           price: close
+         slow_ma:
+           type: SMA
+           period: 170
+           price: close
+       ```
    
    - 公共的逻辑和功需要抽取出来，方便复用。新增功能时也要先看下项目中是否已经存在类似的或可复用的功能，避免重复造轮子
    
    - 每个关键步骤和关键操作节点都需要打印日志和发送telegram消息，除非明确说不需要
    
+   - 订单类型
+   
+     - 止损: STOP_MARKET（触发后市价）
+     - 止盈: TAKE_PROFIT_MARKET 或 TAKE_PROFIT_LIMIT
+   
+     都带 reduceOnly=true, 暂时都带 closePosition=true（后续再考虑分批止盈/止损）
+   
+   - 一些注意事项
+     - K线缓存策略：
+       - KlineCache 按 symbol#interval 缓存最近 N 根 K 线
+       - 首次：获取完整 200 根
+       - 后续：增量获取新 K 线，追加到缓存
+       - 自动清理过期数据
+   
    - 参考如下设计模式（来自 ~/Projects/vibe-quant）：
-      - 状态机 + 模式轮转（如果需要的话）
-      - 订单隔离：run_id 前缀，避免误撤其他实例或手动订单
-      - 日志系统：结构化事件，按事件类型记录，便于追踪和分析，按天自动滚动，自动压缩旧日志为 .gz，错误日志单独文件，成交日志高亮（控制台绿字提示）
-      - WebSocket 重连（如果需要ws的话）：指数退避
-      - 数据陈旧检测（如果需要的话）
-      - 优雅退出机制（参考"业界最佳实践"方向做 Ctrl+C 快速退出）
+     - 状态机 + 模式轮转（如果需要的话）
+     - 订单隔离：run_id 前缀，避免误撤其他实例或手动订单
+     - 日志系统：结构化事件，按事件类型记录，便于追踪和分析，按天自动滚动，自动压缩旧日志为 .gz，错误日志单独文件，成交日志高亮（控制台绿字提示）
+     - WebSocket 重连（如果需要ws的话）：指数退避
+     - 数据陈旧检测（如果需要的话）
+     - 优雅退出机制（参考"业界最佳实践"方向做 Ctrl+C 快速退出）
    
    - Ctrl+C 快速退出的 业界最佳实践 大致思路（尤其是 asyncio + CLI/WS 场景）：
      - 以"取消任务"为核心：收到 SIGINT/SIGTERM 后，向主任务发 cancel，并在各子任务里及时处理 CancelledError，而不是只靠一个 flag。
@@ -59,23 +98,21 @@
      
    - （如果需要的话）关于 fee 手续费资产：USDⓈ-M 永续通常 commissionAsset 会是 USDT，但不要假设；实现上读取成交回报里的 commissionAsset，若不是 USDT（比如 BNB），就按成交时刻 BNBUSDT（或对应计价对）换算成 USDT 记账，这样最稳。
    
-   - （如果需要的话）用“单一 Map + phase_type 字段”的结构，来代替上述所提到的列表（如果有提到列表的话）。我在idea中先统一使用列表表述，你在design中自动进行“单一 Map + phase_type 字段”的对应转换和表述即可。
+   - （如果需要的话）K-V形式：
+     Key: BTC#15m
+     StateValue: signal_k_open_time:"xxxx年xx月xx日 xx:xx:xx", entry_k_open_time:"xxxx年xx月xx日 xx:xx:xx", entry_k_open_price:yyy, fill_time:"xxxx年xx月xx日 xx:xx:xx", fill_price:yyy, qty:xxx, take_profit_price:yyy, init_stop_price:yyy, realtime_stop_price:yyy, exit_reason:"mmm", exit_time:"xxxx年xx月xx日 xx:xx:xx", exit_price:yyy, pnl:yyy, pnl_pct:xxx, fee:yyy, fill_order_id:xxx, take_profit_order_id:xxx, init_stop_order_id:xxx, realtime_stop_order_id:xxx, exit_order_id:xxx, risk_usdt:uuu
    
-   - （如果需要的话）K-V形式，比如：
-   K: BTC#15m
-   V: signal_k_open_time:"xxxx年xx月xx日 xx:xx:xx", entry_k_open_time:"xxxx年xx月xx日 xx:xx:xx", entry_k_open_price:yyy, fill_time:"xxxx年xx月xx日 xx:xx:xx", fill_price:yyy, qty:xxx, take_profit_price:yyy, init_stop_price:yyy, realtime_stop_price:yyy, exit_reason:"mmm", exit_time:"xxxx年xx月xx日 xx:xx:xx", exit_price:yyy, pnl:yyy, pnl_pct:xxx, fee:yyy, fill_order_id:xxx, take_profit_order_id:xxx, init_stop_order_id:xxx, realtime_stop_order_id:xxx, exit_order_id:xxx
-   
-   - （如果需要的话）TTL：进入最终状态列表后，保留 N 个周期。在一开始刚进入最终状态列表的时候，把这个条目持久化追加到项目根目录done.tsv文件中。这样的话过期直接从最终状态列表中删除条目即可
+   - （如果需要的话）TTL：条目进入 *_DONE 阶段后，保留 N 个周期。在刚进入 *_DONE 阶段时，把条目持久化 SQLite 数据。过期后直接从 StateMap 中标记删除状态即可
    明确 TTL 的计算方式，否则依旧可能长期堆积。
      建议实现思路：
      - 配置项：done_ttl_bars（按周期数）
-     - 当条目进入最终状态列表时，记录 done_expire_at
+     - 当条目进入 BREAKOUT_DONE 或 PULLBACK_DONE 阶段时，记录 done_expire_at
          - done_expire_at = exit_open_time + done_ttl_bars * interval_ms
          - 若 exit_open_time 缺失，用最新 K 线 open_time 兜底
-     - 每次阶段处理器跑该周期时，先清理 now >= done_expire_at 的条目
+     - 每次阶段处理器跑该周期时，先清理 now >= done_expire_at 的 *_DONE 条目
      - “now”建议用最新 K 线的 open_time，避免本地时间漂移
    
-   - （如果需要的话）前期推荐“选一个真实/其余模拟”或“全模拟”，等统计摘要稳定后再开放“全真实”。等根据历史统计出或聚合出摘要之后发现效果不错再进行'全都真实交易'会更好，比如这些摘要：
+   - （如果需要的话）前期推荐 dry_run: true（干跑模式，只打印，不下单）。等根据历史统计出或聚合出摘要之后发现效果不错再 dry_run: false（实盘模式），摘要推荐：
      - 今日/最近N天：完成次数、胜率、总盈亏、平均盈亏、平均持仓时长
      - 按周期/币种维度的胜率与盈亏
      - 最大连续亏损、最大回撤（如果有权益曲线可算）
@@ -97,7 +134,10 @@
    
    - （如果需要的话）2倍盈亏比: '入场k'的开盘价 kentry_k_open_price 与 初始止损价 init_stop_price 的2倍盈亏比的地方，比如：入场价是7.561，初始止损价是7.184，则止盈单的价格是8.315
    
-   - （如果需要的话）部分成交处理: 已成交部分视为真实持仓并记录成交信息；未成交部分在超时撤单后，作为“剩余数量”继续按入场逻辑重挂；若不再满足“实际可入场”，则接受已成交数量，撤销剩余挂单，按已成交数量挂止损/止盈。
+   - （如果需要的话）部分成交处理: 已成交部分视为持仓并记录成交信息；未成交部分在超时撤单后，作为“剩余数量”继续按入场逻辑重挂；若不再满足“实际可入场”，则接受已成交数量，撤销剩余挂单，按已成交数量挂止损/止盈。
+   
+   - 
+     
    ```
   </details>
 
@@ -107,7 +147,7 @@
 2. 在 [ChatGPT](https://chatgpt.com/?temporary-chat=true) 或 **Claude Code** 或 **Codex CLI** 讨论设计文档。
    - Prompt：
      ```text
-     根据0_idea.md的内容，请向我提问并与我讨论，最终确认没问题了，输出设计文档“1_design.md“（或输出纯md源码(外层用四个反引号来包裹防止浏览器直接渲染)）。现在你有什么问题要问我吗
+     根据0_idea.md的内容，请先输出你读取到的已经明确的信息，然后再向我提问和讨论你觉得不明确的地方，经过讨论完善后，最终确认没问题后，输出设计文档“1_design.md“（或输出纯md源码(外层用四个反引号来包裹防止浏览器直接渲染)）。现在开始吧
      ```
    - 保存到项目根目录下 `1_design.md`。
    - 审查并完善该文档，确保符合需求；可以简陋，不要过度设计，后续会迭代。
@@ -145,7 +185,7 @@
      - 每一步要小而具体。
      - 每一步都必须包含验证正确性的测试。
      - 严禁包含代码，只写清晰、具体的指令。
-     - 不仅聚焦于基础功能，也要包含完整功能，要求**全面而且详细**。
+     - 不仅聚焦于基础功能，也要包含完整功能、集成、集成测试等，要求**全面而且详细**。
      ```
    - 得到 `3_implementation-plan.md`。
    
