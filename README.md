@@ -265,9 +265,11 @@
   python -m pytest -vv tests -s
   ```
   
-- ```text
-  implementation和idea和design中还有哪些未实现？
+- 其他
   
+  ```text
+  implementation和idea和design中还有哪些未实现？
+  基于静态代码审查，找出当前项目中“隐蔽/深层次”的潜在 bug 和风险点
   ```
   
   
