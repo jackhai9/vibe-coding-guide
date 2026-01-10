@@ -120,11 +120,12 @@
    - （如果需要的话）程序退出时如何处理未完成挂单：是否取消挂单（做成可配置，默认不主动撤单）
    
    - （如果需要的话）clientOrderId 规范<br>
-     结构：`{pnameN}_{role}_{symbol}_{interval}_{side}_{run_id}_{seq}`<br>
-     示例：`{pnameN}_E_BTCUSDT_15m_L_rk9x3f_0001`<br>
+     结构：`{pnameN}_{role}{strategy}_{symbol}_{interval}_{side}_{run_id}_{seq}`<br>
+     示例：`{pnameN}_EB_BTCUSDT_15m_L_rk9x3f_0001`<br>
      字段含义：
      - `pnameN`：系统标识与版本号。比如`tf1`。
      - `role`：订单角色（`E` 入场，`T` 止盈，`I` 初始止损，`R` 实时止损，`X` 退出）。
+     - `strategy`：策略码（`B` 突破，`P` 回调，`U` 未知）。
      - `symbol`：币种。
      - `interval`：周期。
      - `side`：方向（`L`/`S`，当前仅多，预留做空）。
